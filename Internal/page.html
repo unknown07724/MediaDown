@@ -42,43 +42,47 @@
             const wikiContainer = document.getElementById("wiki-container");
             const hash = window.location.hash.substr(1);  // Get the hash without the '#'
             console.log('Hash:', hash);
+
             if (hash === '') {
                 wikiContainer.innerHTML = '<p>Select a wiki from the list above.</p>';
                 return;
             }
 
-            // Split the hash into wiki name and page name
-            const [wiki, page] = hash.split('_');
+            let wiki, page;
 
-            // Check if both parts of the hash are present
-            if (wiki && page) {
-                // Construct the path to the markdown file
-                const filePath = `/MediaDown/Wikis/${wiki}/${page}.md`;
-                console.log(`Fetching wiki page from: ${filePath}`);
-                
-                // Try to load the specific markdown file for the wiki page
-                fetch(filePath)
-                    .then(response => {
-                        if (!response.ok) {
-                            // If the file is not found, show an error message
-                            throw new Error('Page not found or missing markdown file');
-                        }
-                        return response.text();
-                    })
-                    .then(mdContent => {
-                        // Use Showdown.js to convert Markdown to HTML
-                        const converter = new showdown.Converter();
-                        const html = converter.makeHtml(mdContent);
-                        wikiContainer.innerHTML = html;
-                    })
-                    .catch(error => {
-                        // If the page is broken (no .md file), display an error
-                        wikiContainer.innerHTML = `<div class="error"><p>Error: The page "${hash}" is broken or missing the markdown file.</p></div>`;
-                    });
+            // If the hash includes an underscore, it's the new format: wiki_page
+            if (hash.includes('_')) {
+                [wiki, page] = hash.split('_'); // Split into wiki name and page name
             } else {
-                // If the hash format is incorrect, show an error
-                wikiContainer.innerHTML = `<div class="error"><p>Error: The hash format is incorrect. Use [wiki]_[page] format.</p></div>`;
+                wiki = hash;  // Old format: just the wiki name (defaults to index.md)
+                page = 'index'; // Default to index.md if no page is specified
             }
+
+            console.log('Wiki:', wiki);
+            console.log('Page:', page);
+
+            // Construct the file path based on the wiki and page
+            const filePath = `/MediaDown/Wikis/${wiki}/${page}.md`;
+
+            // Try to load the page (either index.md or the specified page)
+            fetch(filePath)
+                .then(response => {
+                    if (!response.ok) {
+                        // If the file is not found, show an error message
+                        throw new Error('Wiki or page not found');
+                    }
+                    return response.text();
+                })
+                .then(mdContent => {
+                    // Use Showdown.js to convert Markdown to HTML
+                    const converter = new showdown.Converter();
+                    const html = converter.makeHtml(mdContent);
+                    wikiContainer.innerHTML = html;
+                })
+                .catch(error => {
+                    // If the wiki or page is missing, display an error
+                    wikiContainer.innerHTML = `<div class="error"><p>Error: The wiki or page "${hash}" is broken or missing.</p></div>`;
+                });
         }
 
         // Load the wiki content when the page is loaded or when the hash changes
@@ -87,6 +91,5 @@
     </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
-
 </body>
 </html>

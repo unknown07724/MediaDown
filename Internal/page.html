@@ -3,80 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mediadown</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <title>Mediadown Wiki</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
             background-color: #f4f4f9;
         }
-        .markdown-content {
-            background-color: white;
+        h1 {
+            color: #333;
+        }
+        .wiki-content {
             padding: 20px;
-            border-radius: 5px;
+            background-color: white;
+            border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         .error {
-            color: red;
-            font-size: 18px;
-            font-weight: bold;
+            padding: 20px;
+            background-color: #ffdddd;
+            color: #d8000c;
+            border: 1px solid #d8000c;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
 
-    <h1>Mediadown Wiki Loading...</h1>
-    <div id="content" class="markdown-content">
-        <!-- Content will be injected here -->
+    <h1>Mediadown Wiki</h1>
+
+    <div id="wiki-container" class="wiki-content">
+        <p>Select a wiki to load...</p>
     </div>
-    <div id="error" class="error"></div>
 
     <script>
-        // Function to fetch the markdown file based on the wiki and hash or page name
-        async function loadPage() {
-            // Get the current URL path and extract the wiki name
-            const path = window.location.pathname;
-            const wikiName = path.split('/').pop().split('.html')[0]; // Extracts wiki name from URL
+        // Function to fetch and load the correct wiki content based on the URL hash
+        function loadWiki() {
+            const wikiContainer = document.getElementById("wiki-container");
+            const hash = window.location.hash.substr(1);  // Get the hash without the '#'
 
-            // Get the current hash or page parameter from the URL
-            const pageHash = window.location.hash.substring(1) || new URLSearchParams(window.location.search).get("page");
-
-            if (!pageHash) {
-                document.getElementById("error").innerText = "No page specified.";
+            if (hash === '') {
+                wikiContainer.innerHTML = '<p>Select a wiki from the list above.</p>';
                 return;
             }
 
-            try {
-                // Construct the path to the markdown file for the specific wiki
-                const markdownFile = `wikis/${wikiName}/${pageHash}.md`; // Path inside the 'wikis' folder
-                
-                // Fetch the Markdown file (from the 'wikis' folder)
-                const response = await fetch(markdownFile);
-                if (!response.ok) {
-                    throw new Error("Page not found.");
-                }
-
-                // Get the text content (Markdown)
-                const markdownText = await response.text();
-                
-                // Convert Markdown to HTML
-                const htmlContent = marked(markdownText);
-                
-                // Display the HTML content
-                document.getElementById("content").innerHTML = htmlContent;
-                document.getElementById("error").innerText = ""; // Clear any error message
-            } catch (error) {
-                console.error("Error loading page:", error);
-                document.getElementById("content").innerHTML = ""; // Clear previous content
-                document.getElementById("error").innerText = `Error: ${error.message}`;
-            }
+            // Try to load the index.md file from the wiki folder
+            fetch(`../wikis/${hash}/index.md`)  // Adjust this path if needed
+                .then(response => {
+                    if (!response.ok) {
+                        // If the file is not found, show an error message
+                        throw new Error('Wiki not found or missing index.md');
+                    }
+                    return response.text();
+                })
+                .then(mdContent => {
+                    // Use Showdown.js to convert Markdown to HTML
+                    const converter = new showdown.Converter();
+                    const html = converter.makeHtml(mdContent);
+                    wikiContainer.innerHTML = html;
+                })
+                .catch(error => {
+                    // If the wiki is broken (no index.md), display an error
+                    wikiContainer.innerHTML = `<div class="error"><p>Error: The wiki "${hash}" is broken or missing the index.md file.</p></div>`;
+                });
         }
 
-        // Run the loadPage function when the page is ready
-        window.addEventListener("load", loadPage);
-        window.addEventListener("hashchange", loadPage);  // Re-run when the hash changes
+        // Load the wiki content when the page is loaded or when the hash changes
+        window.addEventListener("load", loadWiki);
+        window.addEventListener("hashchange", loadWiki);
     </script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
 </body>
 </html>

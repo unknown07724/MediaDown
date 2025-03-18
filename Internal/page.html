@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mediadown Wiki Loading</title>
+    <title>Mediadown</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body {
@@ -26,7 +26,7 @@
 </head>
 <body>
 
-    <h1>Mediadown Wiki Farm</h1>
+    <h1>Mediadown Wiki Loading...</h1>
     <div id="content" class="markdown-content">
         <!-- Content will be injected here -->
     </div>
@@ -35,9 +35,12 @@
     <script>
         // Function to fetch the markdown file based on the wiki and hash or page name
         async function loadPage() {
+            // Get the current URL path and extract the wiki name
+            const path = window.location.pathname;
+            const wikiName = path.split('/').pop().split('.html')[0]; // Extracts wiki name from URL
+
             // Get the current hash or page parameter from the URL
             const pageHash = window.location.hash.substring(1) || new URLSearchParams(window.location.search).get("page");
-            const wikiName = new URLSearchParams(window.location.search).get("wiki") || "defaultWiki"; // Default to "defaultWiki" if none is specified
 
             if (!pageHash) {
                 document.getElementById("error").innerText = "No page specified.";

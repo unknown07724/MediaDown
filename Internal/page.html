@@ -26,25 +26,20 @@
             border: 1px solid #d8000c;
             border-radius: 5px;
         }
+        /* Infobox styling */
         .infobox {
-            width: 250px;
-            padding: 10px;
-            background-color: #f0f0f0;
             border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            margin: 20px 0;
-        }
-        .infobox img {
-            width: 100%;
-            height: auto;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #f9f9f9;
             border-radius: 8px;
         }
-        .infobox h2 {
-            color: #333;
+        .infobox-title {
+            font-weight: bold;
+            margin-bottom: 5px;
         }
-        .infobox p {
-            color: #555;
+        .infobox-content {
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -62,56 +57,69 @@
             const wikiContainer = document.getElementById("wiki-container");
             const hash = window.location.hash.substr(1);  // Get the hash without the '#'
             console.log('Hash:', hash);
+
             if (hash === '') {
                 wikiContainer.innerHTML = '<p>Select a wiki from the list above.</p>';
                 return;
             }
 
-            // Try to load the index.md file from the wiki folder
-            fetch(`/MediaDown/Wikis/${hash}/index.md`)  // Adjust this path if needed
+            // Split the hash to get the wiki name and page name
+            const [wiki, page = 'index'] = hash.split('_');  // Default to 'index' if no page is specified
+            console.log('Wiki:', wiki);
+            console.log('Page:', page);
+
+            // Try to load the index.md or the page file from the wiki folder
+            fetch(`/MediaDown/Wikis/${wiki}/${page}.md`)  // Adjust this path if needed
                 .then(response => {
                     if (!response.ok) {
                         // If the file is not found, show an error message
-                        throw new Error('Wiki not found or missing index.md');
+                        throw new Error(`The page "${page}.md" in the wiki "${wiki}" is missing.`);
                     }
                     return response.text();
                 })
                 .then(mdContent => {
-                    // Use Showdown.js to convert Markdown to HTML
+                    // Convert Markdown to HTML
                     const converter = new showdown.Converter();
                     let html = converter.makeHtml(mdContent);
 
-                    // Check for and replace Infobox tags
-                    html = html.replace(/\{\{Infobox\s*([\s\S]*?)\}\}/g, (match, p1) => {
-                        // Extract infobox fields
-                        const infoboxFields = {};
-                        const infoboxData = p1.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-
-                        infoboxData.forEach(line => {
-                            const [key, value] = line.split('=').map(part => part.trim());
-                            if (key && value) {
-                                infoboxFields[key] = value;
-                            }
-                        });
-
-                        // Render the Infobox HTML
-                        return `
-                            <div class="infobox">
-                                <img src="/path/to/image/${infoboxFields.image || ''}" alt="${infoboxFields.name || 'Infobox'}" />
-                                <h2>${infoboxFields.name || 'Infobox'}</h2>
-                                <p><strong>Occupation:</strong> ${infoboxFields.occupation || 'N/A'}</p>
-                                <p><strong>Date of Birth:</strong> ${infoboxFields.date_of_birth || 'N/A'}</p>
-                                <p><strong>Nationality:</strong> ${infoboxFields.nationality || 'N/A'}</p>
-                            </div>
-                        `;
-                    });
+                    // Convert infoboxes
+                    html = convertInfoboxes(html);
 
                     wikiContainer.innerHTML = html;
                 })
                 .catch(error => {
-                    // If the wiki is broken (no index.md), display an error
-                    wikiContainer.innerHTML = `<div class="error"><p>Error: The wiki "${hash}" is broken or missing the index file.</p></div>`;
+                    // If the wiki or page is broken (missing .md file), display an error
+                    wikiContainer.innerHTML = `<div class="error"><p>Error: ${error.message}</p></div>`;
                 });
+        }
+
+        // Function to convert infoboxes in the Markdown to HTML
+        function convertInfoboxes(htmlContent) {
+            // Regular expression to find infobox syntax in Markdown
+            const infoboxRegex = /{{Infobox\s*([\s\S]*?)}}/g;
+            let match;
+            while ((match = infoboxRegex.exec(htmlContent)) !== null) {
+                const infoboxContent = match[1];
+                const infoboxHtml = generateInfoboxHtml(infoboxContent);
+                htmlContent = htmlContent.replace(match[0], infoboxHtml);
+            }
+            return htmlContent;
+        }
+
+        // Function to generate HTML for an infobox
+        function generateInfoboxHtml(content) {
+            const rows = content.split('\n').filter(line => line.trim().length > 0);
+            let infoboxHtml = '<div class="infobox"><div class="infobox-title">Infobox</div><div class="infobox-content">';
+            
+            rows.forEach(row => {
+                const parts = row.split(':').map(part => part.trim());
+                if (parts.length === 2) {
+                    infoboxHtml += `<p><strong>${parts[0]}:</strong> ${parts[1]}</p>`;
+                }
+            });
+
+            infoboxHtml += '</div></div>';
+            return infoboxHtml;
         }
 
         // Load the wiki content when the page is loaded or when the hash changes

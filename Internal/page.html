@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mediadown Wiki Loading</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        .markdown-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .error {
+            color: red;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Mediadown Wiki Farm</h1>
+    <div id="content" class="markdown-content">
+        <!-- Content will be injected here -->
+    </div>
+    <div id="error" class="error"></div>
+
+    <script>
+        // Function to fetch the markdown file based on the wiki and hash or page name
+        async function loadPage() {
+            // Get the current hash or page parameter from the URL
+            const pageHash = window.location.hash.substring(1) || new URLSearchParams(window.location.search).get("page");
+            const wikiName = new URLSearchParams(window.location.search).get("wiki") || "defaultWiki"; // Default to "defaultWiki" if none is specified
+
+            if (!pageHash) {
+                document.getElementById("error").innerText = "No page specified.";
+                return;
+            }
+
+            try {
+                // Construct the path to the markdown file for the specific wiki
+                const markdownFile = `wikis/${wikiName}/${pageHash}.md`; // Path inside the 'wikis' folder
+                
+                // Fetch the Markdown file (from the 'wikis' folder)
+                const response = await fetch(markdownFile);
+                if (!response.ok) {
+                    throw new Error("Page not found.");
+                }
+
+                // Get the text content (Markdown)
+                const markdownText = await response.text();
+                
+                // Convert Markdown to HTML
+                const htmlContent = marked(markdownText);
+                
+                // Display the HTML content
+                document.getElementById("content").innerHTML = htmlContent;
+                document.getElementById("error").innerText = ""; // Clear any error message
+            } catch (error) {
+                console.error("Error loading page:", error);
+                document.getElementById("content").innerHTML = ""; // Clear previous content
+                document.getElementById("error").innerText = `Error: ${error.message}`;
+            }
+        }
+
+        // Run the loadPage function when the page is ready
+        window.addEventListener("load", loadPage);
+        window.addEventListener("hashchange", loadPage);  // Re-run when the hash changes
+    </script>
+
+</body>
+</html>

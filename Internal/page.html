@@ -37,11 +37,12 @@
     </div>
 
     <script>
+        
         // Function to fetch and load the correct wiki content based on the URL hash
         function loadWiki() {
             const wikiContainer = document.getElementById("wiki-container");
             const hash = window.location.hash.substr(1);  // Get the hash without the '#'
-
+            console.log('Hash:', hash);
             if (hash === '') {
                 wikiContainer.innerHTML = '<p>Select a wiki from the list above.</p>';
                 return;

@@ -60,7 +60,7 @@
             wikiFolders.forEach(wiki => {
                 const li = document.createElement("li");
                 const link = document.createElement("a");
-                link.href = `internal/page.html#${wiki}`;  // Link to the wiki with hash
+                link.href = `internal/page.html#${wiki}/index.md`;  // Link to the wiki with hash
                 link.textContent = wiki;  // Display the wiki name
                 li.appendChild(link);
                 wikiListContainer.appendChild(li);

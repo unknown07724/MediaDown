@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mediadown Wiki Farm - Index</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            color: #333;
+        }
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        li {
+            margin: 10px 0;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        a {
+            text-decoration: none;
+            color: #1a73e8;
+            font-weight: bold;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Mediadown Wiki Farm</h1>
+    <p>Welcome to the Mediadown Wiki Farm. Choose a wiki to explore:</p>
+
+    <ul id="wiki-list">
+        <!-- Wiki links will be dynamically inserted here -->
+    </ul>
+
+    <script>
+        // Function to fetch and list all wikis dynamically
+        async function listWikis() {
+            const wikiListContainer = document.getElementById("wiki-list");
+
+            // Fetch the available wikis from the /wikis folder (you could fetch this from a server-side script if needed)
+            const wikiFolders = ['mediadown']; // Example, you can add more or automate this if needed
+
+            if (wikiFolders.length === 0) {
+                wikiListContainer.innerHTML = "<li>No wikis found.</li>";
+                return;
+            }
+
+            // Loop through each wiki and create a link to its page with a hash
+            wikiFolders.forEach(wiki => {
+                const li = document.createElement("li");
+                const link = document.createElement("a");
+                link.href = `internal/page.html#${wiki}`;  // Link to the wiki with hash
+                link.textContent = wiki;  // Display the wiki name
+                li.appendChild(link);
+                wikiListContainer.appendChild(li);
+            });
+        }
+
+        // Call the function to list wikis on page load
+        window.addEventListener("load", listWikis);
+    </script>
+
+</body>
+</html>
+

@@ -26,6 +26,26 @@
             border: 1px solid #d8000c;
             border-radius: 5px;
         }
+        .infobox {
+            width: 250px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
+        .infobox img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+        .infobox h2 {
+            color: #333;
+        }
+        .infobox p {
+            color: #555;
+        }
     </style>
 </head>
 <body>
@@ -42,46 +62,55 @@
             const wikiContainer = document.getElementById("wiki-container");
             const hash = window.location.hash.substr(1);  // Get the hash without the '#'
             console.log('Hash:', hash);
-
             if (hash === '') {
                 wikiContainer.innerHTML = '<p>Select a wiki from the list above.</p>';
                 return;
             }
 
-            let wiki, page;
-
-            // If the hash includes an underscore, it's the new format: wiki_page
-            if (hash.includes('_')) {
-                [wiki, page] = hash.split('_'); // Split into wiki name and page name
-            } else {
-                wiki = hash;  // Old format: just the wiki name (defaults to index.md)
-                page = 'index'; // Default to index.md if no page is specified
-            }
-
-            console.log('Wiki:', wiki);
-            console.log('Page:', page);
-
-            // Construct the file path based on the wiki and page
-            const filePath = `/MediaDown/Wikis/${wiki}/${page}`;
-
-            // Try to load the page (either index.md or the specified page)
-            fetch(filePath)
+            // Try to load the index.md file from the wiki folder
+            fetch(`/MediaDown/Wikis/${hash}/index.md`)  // Adjust this path if needed
                 .then(response => {
                     if (!response.ok) {
                         // If the file is not found, show an error message
-                        throw new Error('Wiki or page not found');
+                        throw new Error('Wiki not found or missing index.md');
                     }
                     return response.text();
                 })
                 .then(mdContent => {
                     // Use Showdown.js to convert Markdown to HTML
                     const converter = new showdown.Converter();
-                    const html = converter.makeHtml(mdContent);
+                    let html = converter.makeHtml(mdContent);
+
+                    // Check for and replace Infobox tags
+                    html = html.replace(/\{\{Infobox\s*([\s\S]*?)\}\}/g, (match, p1) => {
+                        // Extract infobox fields
+                        const infoboxFields = {};
+                        const infoboxData = p1.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+                        infoboxData.forEach(line => {
+                            const [key, value] = line.split('=').map(part => part.trim());
+                            if (key && value) {
+                                infoboxFields[key] = value;
+                            }
+                        });
+
+                        // Render the Infobox HTML
+                        return `
+                            <div class="infobox">
+                                <img src="/path/to/image/${infoboxFields.image || ''}" alt="${infoboxFields.name || 'Infobox'}" />
+                                <h2>${infoboxFields.name || 'Infobox'}</h2>
+                                <p><strong>Occupation:</strong> ${infoboxFields.occupation || 'N/A'}</p>
+                                <p><strong>Date of Birth:</strong> ${infoboxFields.date_of_birth || 'N/A'}</p>
+                                <p><strong>Nationality:</strong> ${infoboxFields.nationality || 'N/A'}</p>
+                            </div>
+                        `;
+                    });
+
                     wikiContainer.innerHTML = html;
                 })
                 .catch(error => {
-                    // If the wiki or page is missing, display an error
-                    wikiContainer.innerHTML = `<div class="error"><p>Error: The wiki or page "${hash}" is broken or missing.</p></div>`;
+                    // If the wiki is broken (no index.md), display an error
+                    wikiContainer.innerHTML = `<div class="error"><p>Error: The wiki "${hash}" is broken or missing the index file.</p></div>`;
                 });
         }
 
@@ -93,3 +122,4 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
 </body>
 </html>
+

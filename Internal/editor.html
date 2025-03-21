@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mediadown Wiki Editor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.10/marked.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #editor-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        #markdown-editor {
+            width: 48%;
+            height: 500px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-family: monospace;
+        }
+
+        #preview {
+            width: 48%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            background-color: white;
+            overflow-y: auto;
+            height: 500px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .error {
+            padding: 10px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border-radius: 5px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            padding: 10px;
+            background-color: #d4edda;
+            color: #155724;
+            border-radius: 5px;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Mediadown Wiki Editor</h1>
+
+    <div id="editor-container">
+        <textarea id="markdown-editor" placeholder="Write your markdown here..."></textarea>
+        <div id="preview"></div>
+    </div>
+
+    <button id="copy-button">Copy Markdown</button>
+    <div id="status-message"></div>
+
+    <script>
+        // Get the elements
+        const editor = document.getElementById('markdown-editor');
+        const preview = document.getElementById('preview');
+        const copyButton = document.getElementById('copy-button');
+        const statusMessage = document.getElementById('status-message');
+
+        // Function to update preview as you type
+        editor.addEventListener('input', updatePreview);
+
+        function updatePreview() {
+            const markdownText = editor.value;
+            preview.innerHTML = marked.parse(markdownText); // Convert markdown to HTML
+        }
+
+        // Function to handle copy button click
+        copyButton.addEventListener('click', copyMarkdown);
+
+        function copyMarkdown() {
+            const markdownText = editor.value;
+            
+            if (markdownText.trim() === "") {
+                statusMessage.innerHTML = "No content to copy!";
+                statusMessage.className = "error";
+                return;
+            }
+
+            // Create a temporary textarea to copy the text
+            const tempTextarea = document.createElement("textarea");
+            tempTextarea.value = markdownText;
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempTextarea);
+
+            statusMessage.innerHTML = "Markdown copied to clipboard!";
+            statusMessage.className = "success";
+        }
+    </script>
+
+</body>
+</html>
